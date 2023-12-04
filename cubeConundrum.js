@@ -11,11 +11,14 @@ const possibleCubes = {
 (async () => {
 	const file = await open('./inputs/2.txt');
 	var sum = 0;
+	var powers = 0;
 
 	for await (const line of file.readLines()) {
 		sum += testGame( line );
+		powers += getPower( line );
 	}
-	console.log(sum);
+	console.log('Part 1:  the sum of the id\'s is ' + sum);
+	console.log('Part 2:  the sum of the powers is ' + powers);
 })();
 
 /**
@@ -32,6 +35,29 @@ function testGame( game ) {
 		}
 	}
 	return Number.parseInt( id );
+}
+
+function getPower( game ) {
+	const { reveals } = prepare( game );
+	const maxes = {
+		'red': 0,
+		'green': 0,
+		'blue': 0,
+	};
+	for( reveal of reveals ) {
+		const colors = reveal.split(',');
+		for( color of colors ) {
+			color = color.trim();
+			const space = color.indexOf(' ');
+			const count = Number.parseInt( color.substring(0, space) );
+			color = color.substring(space + 1);
+			if( count > maxes[ color ] ) {
+				maxes[ color ] = count;
+			}
+		}
+	}
+
+	return maxes.red * maxes.green * maxes.blue;
 }
 
 function prepare( game ) {
