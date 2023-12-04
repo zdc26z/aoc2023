@@ -33,18 +33,19 @@ function parseInput( line ) {
 			numbers.push( line[i] );
 		}
 	}
-	return Number.parseInt( numbers[0] + numbers[ numbers.length - 1 ] );
+	let number = Number.parseInt( numbers[0] + numbers[ numbers.length - 1 ] );
+	return number
 }
 
 function convertWords( line ) {
-	console.log('before: ', line);
 	for( let i=0; i < digits.length; i++ ) {
 		let pos = line.indexOf( digits[i] );
-		if( pos >= 0 ) {
-			console.log(digits[i]);
-			line = line.substring(0, pos) + i + line.substring(pos + 1);
+		// There may be more than one occurrence of a number word per line
+		while( pos >= 0 ) {
+			// Words may overlap, so replace the second letter instead of the first B-)
+			line = line.substring(0, pos + 1) + i + line.substring(pos + 2);
+			pos = line.indexOf( digits[i] );
 		}
 	}
-	console.log('after: ', line);
 	return line;
 }
