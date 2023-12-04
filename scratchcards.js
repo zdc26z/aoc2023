@@ -13,9 +13,9 @@ const { open } = require('node:fs/promises');
 		cards.push( new Card( winningNumbers, myNumbers ) );
 		points += calcPoints( winningNumbers, myNumbers );
 	}
-	winMoreCards( cards );
+	const total = winMoreCards( cards );
 	console.log('Part 1:  total points ' + points);
-	console.log('Part 2:  total number of cards is ' + countAllCards( cards ));
+	console.log('Part 2:  total number of cards is ' + total);
 })();
 
 function calcPoints( winningNumbers, myNumbers ) {
@@ -43,20 +43,15 @@ function countWinners( card ) {
 }
 
 function winMoreCards( cards ) {
+	var count = 0;
 	for(let i=1; i<cards.length; i++) {
+		count += cards[i].copies;
 		const winners = countWinners( cards[i] );
 		for(let j=0; j < cards[i].copies; j++) {
 			for(let k=i+1; k <= i + winners; k++) {
 				cards[k].copy();
 			}
 		}
-	}
-}
-
-function countAllCards( cards ) {
-	var count = 0;
-	for(let i=1; i < cards.length; i++ ) {
-		count += cards[i].copies;
 	}
 	return count;
 }
