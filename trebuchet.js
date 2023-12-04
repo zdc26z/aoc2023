@@ -1,3 +1,5 @@
+// Day 1:  Trebuchet?!
+
 const { open } = require('node:fs/promises');
 
 const digits = [
