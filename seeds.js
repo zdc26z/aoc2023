@@ -4,6 +4,7 @@ const { open } = require('node:fs/promises');
 
 (async () => {
 	const file = await open('./inputs/5.txt');
+	const seedRanges = [];
 	const maps = {};
 	var lowestLocation = false;
 	var seeds = [];
@@ -23,14 +24,23 @@ const { open } = require('node:fs/promises');
 		}
 	}
 
-	for( seed of seeds ) {
-		seed = seedToLocation( seed, maps );
+	for( let i=0; i < seeds.length; i++ ) {
+		if( i%2 === 0 ) {
+			seedRanges.push( { 'start': seeds[i] } );
+		} else {
+			let lastRange = seedRanges.pop();
+			lastRange.length = seeds[i];
+			seedRanges.push( lastRange );
+		}
+		let seed = seedToLocation( seeds[i], maps );
 		if( ! lowestLocation || seed < lowestLocation ) {
 			lowestLocation = seed;
 		}
 	}
 
 	console.log('Part 1:  closest location is ', lowestLocation);
+
+	console.log('Part 2:  closest location is ', closestLocation( seedRanges, maps ));
 
 })();
 
@@ -53,6 +63,30 @@ function seedToLocation( seed, maps ) {
 	return seed;
 }
 
+function locationToSeed( loc, maps ) {
+	loc = maps['humidity-to-location'].revert( loc );
+	loc = maps['temperature-to-humidity'].revert( loc );
+	loc = maps['light-to-temperature'].revert( loc );
+	loc = maps['water-to-light'].revert( loc );
+	loc = maps['fertilizer-to-water'].revert( loc );
+	loc = maps['soil-to-fertilizer'].revert( loc );
+	loc = maps['seed-to-soil'].revert( loc );
+	return loc;
+}
+
+function closestLocation( seedRanges, maps ) {
+	let loc = 0;
+	while( true ) {
+		let seed = locationToSeed( loc, maps );
+		for( range of seedRanges ) {
+			if( seed >= range.start && seed <= ( range.start + range.length ) ) {
+				return loc;
+			}
+		}
+		loc++;
+	}
+}
+
 class AlmanacMap {
 	#ranges = [];
 
@@ -62,8 +96,17 @@ class AlmanacMap {
 
 	convert( value ) {
 		for( const range of this.#ranges ) {
-			if( range.inRange( value ) ) {
+			if( range.inSource( value ) ) {
 				return range.convert( value );
+			}
+		}
+		return value;
+	}
+
+	revert( value ) {
+		for( const range of this.#ranges ) {
+			if( range.inDest( value ) ) {
+				return range.revert( value );
 			}
 		}
 		return value;
@@ -71,24 +114,33 @@ class AlmanacMap {
 }
 
 class MapRange {
-	#start;
-	#end;
+	#destStart;
+	#destEnd;
+	#sourceStart;
+	#sourceEnd;
 	#delta;
 
 	constructor( destStart, sourceStart, length ) {
-		this.#start = sourceStart;
-		this.#end = sourceStart + length;
+		this.#sourceStart = sourceStart;
+		this.#sourceEnd = sourceStart + length;
+		this.#destStart = destStart;
+		this.#destEnd = destStart + length;
 		this.#delta = destStart - sourceStart;
 	}
 
-	inRange( value ) {
-		return value >= this.#start && value <= this.#end;
+	inSource( value ) {
+		return value >= this.#sourceStart && value <= this.#sourceEnd;
+	}
+
+	inDest( value ) {
+		return value >= this.#destStart && value <= this.#destEnd;
 	}
 
 	convert( value ) {
-		if ( this.inRange( value ) ) {
-			return value + this.#delta;
-		}
-		return false;
+		return value + this.#delta;
+	}
+
+	revert( value ) {
+		return value - this.#delta;
 	}
 }
