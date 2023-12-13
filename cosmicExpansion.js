@@ -15,9 +15,16 @@ const { open } = require('node:fs/promises');
 	const galaxies = mapThe( universe );
 
 	var count = galaxies.length;
+  var sum = 0;
 	for( let i=1; i<count; i++ ) {
 		let galaxy = galaxies.shift();
+    for( let j=0; j<galaxies.length; j++ ) {
+      let distance = Math.abs( galaxies[j].x - galaxy.x ) + Math.abs( galaxies[j].y - galaxy.y ) ;
+      sum += distance;
+    }
 	}
+
+  console.log('Part 1:  the sum of the shortest distances is ', sum);
 })();
 
 function expand( universe ) {
@@ -31,6 +38,7 @@ function expand( universe ) {
 			if( i === 0 && universe[i][j] === '.' ) {
 				columns.push( true );
 			} else if ( i === 0 ) {
+        expand = false;
 				columns.push( false );
 			} else if ( universe[i][j] !== '.' ) {
 				expand = false;
@@ -70,7 +78,7 @@ function print( universe ) {
 function mapThe( universe ) {
 	const galaxies = [];
 	for( let i=0; i<universe.length; i++ ) {
-		for( let j=0; j<universe.length; j++ ) {
+		for( let j=0; j<universe[i].length; j++ ) {
 			if( universe[i][j] !== '.' ) {
 				galaxies.push( { x: j, y: i } );
 			}
