@@ -10,58 +10,78 @@ const { open } = require('node:fs/promises');
 		universe.push( line.split('') );
 	}
 
-	universe = expand( universe );
+	const expanders = expand( universe );
+  console.log(expanders);
 
-	const galaxies = mapThe( universe );
+  var sum = totalDistance( mapThe( universe ), expanders );
 
+  console.log('Part 1:  the sum of the shortest distances is ', sum);
+
+  sum = totalDistance( mapThe( universe ), expanders, 999999 );
+  console.log('Part 2:  the sum of the shortest distances is ', sum);
+
+})();
+
+function totalDistance( galaxies, expanders, expansionFactor = 1 ) {
 	var count = galaxies.length;
   var sum = 0;
 	for( let i=1; i<count; i++ ) {
 		let galaxy = galaxies.shift();
     for( let j=0; j<galaxies.length; j++ ) {
-      let distance = Math.abs( galaxies[j].x - galaxy.x ) + Math.abs( galaxies[j].y - galaxy.y ) ;
+      let x1 = galaxy.x;
+      let y1 = galaxy.y;
+      let x2 = galaxies[j].x;
+      let y2 = galaxies[j].y;
+      for( column of expanders.columns ) {
+        if( column < galaxy.x ) {
+          x1 += expansionFactor;
+        }
+        if( column < galaxies[j].x ) {
+          x2 += expansionFactor;
+        }
+      }
+      for( row of expanders.rows ) {
+        if( row < galaxy.y ) {
+          y1 += expansionFactor;
+        }
+        if( row < galaxies[j].y ) {
+          y2 += expansionFactor;
+        }
+      }
+      let distance = Math.abs( x2 - x1 ) + Math.abs( y2 - y1 ) ;
+      // console.log(i, '(', galaxy.x, ',', galaxy.y, ')', i+j+1, '(', x2, ',', y2, ')', distance);
       sum += distance;
     }
 	}
-
-  console.log('Part 1:  the sum of the shortest distances is ', sum);
-})();
+  return sum;
+}
 
 function expand( universe ) {
-	const expandedUniverse = [];
+  const expandedUniverse = {
+    columns: [],
+    rows: [],
+  };
 	const columns = [];
 	for( let i=0; i<universe.length; i++ ) {
 		var expand = true;
-		const row = [];
 		for( let j=0; j<universe[i].length; j++ ) {
-			row.push(universe[i][j]);
 			if( i === 0 && universe[i][j] === '.' ) {
-				columns.push( true );
+				expandedUniverse.columns.push( j );
 			} else if ( i === 0 ) {
         expand = false;
-				columns.push( false );
 			} else if ( universe[i][j] !== '.' ) {
 				expand = false;
-				columns[j] = false;
+        if( expandedUniverse.columns.includes( j ) ) {
+          delete expandedUniverse.columns[ expandedUniverse.columns.indexOf( j ) ];
+        }
 			}
 		}
-		expandedUniverse.push( row );
 		if( expand ) {
-			expandedUniverse.push( row );
+      expandedUniverse.rows.push( i );
 		}
 	}
 
-	for( let i=0; i<expandedUniverse.length; i++ ) {
-		const row = [];
-		for( let j=0; j<columns.length; j++ ) {
-			row.push( expandedUniverse[i][j] );
-			if( columns[j] ) {
-				row.push( expandedUniverse[i][j] );
-			}
-		}
-		expandedUniverse[i] = row;
-	}
-	
+  expandedUniverse.columns = expandedUniverse.columns.filter(Boolean);
 	return expandedUniverse;
 }
 
