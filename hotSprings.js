@@ -18,10 +18,12 @@ const { open } = require('node:fs/promises');
 class Record {
 	data;
 	groups;
+	largestGroup;
 
 	constructor( data, groups ) {
 		this.data = data;
 		this.groups = groups;
+		this.largestGroup = Math.max( ...groups );
 	}
 
 	getPossibleArrangements() {
@@ -29,7 +31,7 @@ class Record {
 		const totalPossibilities = Math.pow(2, unknowns);
 		var count = 0;
 
-		for( let i=0; i<totalPossibilities; i++ ) {
+		nextPossibility: for( let i=0; i<totalPossibilities; i++ ) {
 			const isBroken = i.toString(2).split('').map( (d) => { return d === '1'; } );
 			const groups = [];
 			var groupCount = 0;
@@ -55,6 +57,9 @@ class Record {
 						groups.push( groupCount );
 						groupCount = 0;
 					}
+				}
+				if( groupCount > this.largestGroup ) {
+					continue nextPossibility;
 				}
 			}
 			if( groupCount > 0 ) {
